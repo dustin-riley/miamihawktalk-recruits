@@ -2,7 +2,7 @@ import Component from "@glimmer/component";
 import { htmlSafe } from "@ember/template";
 import { i18n } from "discourse-i18n";
 import { themePrefix } from "virtual:theme";
-import { relativeAge, sortOffers } from "../lib/recruit-data";
+import { isMiamiTeam, relativeAge, sortOffers } from "../lib/recruit-data";
 
 export default class RecruitCard extends Component {
   get recruit() {
@@ -27,10 +27,24 @@ export default class RecruitCard extends Component {
     return Number.isFinite(this.recruit.rating) || Number.isFinite(this.recruit.stars);
   }
 
-  // Plain text, not markup — no htmlSafe, so this can never inject.
+  // Same finite check as hasRating — a rating of 0 must render the composite
+  // number, not hide it the way a plain truthiness check on `0` would.
+  get hasCompositeRating() {
+    return Number.isFinite(this.recruit.rating);
+  }
+
+  // An absent `stars` must never be depicted as an empty five-star row, so the
+  // row itself is conditional on this rather than always rendering starsText.
+  get hasStars() {
+    return Number.isFinite(this.recruit.stars);
+  }
+
+  // Plain text, not markup — no htmlSafe, so this can never inject. Clamped to
+  // the 0-5 scale so an out-of-range value can't render more than 5 glyphs.
   get starsText() {
-    const filled = Number.isFinite(this.recruit.stars) ? this.recruit.stars : 0;
-    return "★".repeat(filled) + "☆".repeat(Math.max(0, 5 - filled));
+    const raw = this.recruit.stars;
+    const filled = Number.isFinite(raw) ? Math.min(5, Math.max(0, Math.floor(raw))) : 0;
+    return "★".repeat(filled) + "☆".repeat(5 - filled);
   }
 
   // null (no offers section on the page) renders no panel at all. An empty
@@ -50,7 +64,7 @@ export default class RecruitCard extends Component {
     }
     return sorted.map((offer) => ({
       ...offer,
-      isMiami: /^miami \(oh\)/i.test(String(offer.team || "")),
+      isMiami: isMiamiTeam(offer.team),
     }));
   }
 
@@ -83,8 +97,10 @@ export default class RecruitCard extends Component {
 
         {{#if this.hasRating}}
           <div class="mht-recruit__rating">
-            <div class="mht-recruit__stars">{{this.starsText}}</div>
-            {{#if this.recruit.rating}}
+            {{#if this.hasStars}}
+              <div class="mht-recruit__stars">{{this.starsText}}</div>
+            {{/if}}
+            {{#if this.hasCompositeRating}}
               <div class="mht-recruit__composite">{{this.recruit.rating}}</div>
             {{/if}}
           </div>

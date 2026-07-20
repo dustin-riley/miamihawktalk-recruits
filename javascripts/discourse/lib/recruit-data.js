@@ -73,6 +73,13 @@ export function relativeAge(iso) {
   return hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
 }
 
+// Single source of truth for "is this offer Miami (OH)?" — used by sortOffers
+// below and by the component's highlight logic, so sort order and highlight
+// marking can never drift apart.
+export function isMiamiTeam(team) {
+  return /^miami \(oh\)/i.test(String(team || ""));
+}
+
 // Miami first, then the rest in the order 247 lists them. The full list is
 // preserved — this only moves the row readers came for off the bottom.
 export function sortOffers(offers, pinMiami = true) {
@@ -82,6 +89,6 @@ export function sortOffers(offers, pinMiami = true) {
   if (!pinMiami) {
     return offers.slice();
   }
-  const isMiami = (o) => /^miami \(oh\)/i.test(String(o?.team || ""));
+  const isMiami = (o) => isMiamiTeam(o?.team);
   return [...offers.filter(isMiami), ...offers.filter((o) => !isMiami(o))];
 }
