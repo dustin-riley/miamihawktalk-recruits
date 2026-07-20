@@ -205,6 +205,100 @@ aside.onebox[data-mht-recruit-rendered] {
     border-left-color: var(--tertiary);
   }
 
+  // Stat-block: the compact layout. A framed card split into a narrow left
+  // rail (photo + ratings + stars) and a body (identity + three summary
+  // stats). There is deliberately no school list here — 247 only ever shows a
+  // sample of offers, and this layout is honest about not having the rest.
+  &--stat-block {
+    display: flex;
+    border: 1px solid var(--primary-low);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  // The rail is only ~88px, so the two ratings stack vertically rather than
+  // sitting side by side as they do in editorial. Both stay labeled and the
+  // same size — neither rating is subordinate to the other.
+  &__rail {
+    flex: 0 0 88px;
+    padding: 0.6em;
+    text-align: center;
+    background: var(--primary-very-low);
+
+    .mht-recruit__stat {
+      margin-top: 0.4em;
+    }
+  }
+
+  // Resolves to `.mht-recruit--committed.mht-recruit--stat-block
+  // .mht-recruit__rail` — both modifiers on the same element, then the rail
+  // as a descendant. The --committed class is applied only for a *Miami*
+  // commitment (see RecruitStatBlock's template), so this flood keeps red
+  // meaning Miami rather than "commitment generally"; a recruit committed to
+  // another school keeps the neutral rail and gets a plain commit line in the
+  // body instead.
+  &--committed#{&}--stat-block &__rail {
+    background: var(--tertiary);
+
+    .mht-recruit__stat b,
+    .mht-recruit__stat span,
+    .mht-recruit__stars {
+      color: var(--secondary);
+    }
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    // Without this the body's min-content floor (a long, nowrap subtitle)
+    // pushes the flex row wider than the post column instead of ellipsising.
+    min-width: 0;
+    padding: 0.7em 0.85em;
+  }
+
+  // Neutral, never tertiary: this line only ever names a school that is not
+  // Miami.
+  &__commit-line {
+    margin-top: 0.35em;
+    font-size: $font-down-2;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary-medium);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // Wraps rather than overflows: at the ~326px a post leaves on a 390px
+  // phone, the body is only ~215px wide once the rail is subtracted, and
+  // three stats with a word-valued Miami cell do not fit on one line.
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em 1.2em;
+    margin-top: 0.6em;
+    padding-top: 0.6em;
+    border-top: 1px solid var(--primary-low);
+
+    .mht-recruit__stat {
+      text-align: left;
+    }
+  }
+
+  // The Miami cell's value is a word ("Committed" / "No offer"), not a
+  // numeral, so it steps down from the $font-up-2 the numeric stats use.
+  // Equal specificity to `&__stat b`, and later in source, so it wins.
+  &__stat--miami b {
+    font-size: $font-up-1;
+  }
+
+  // Only when Miami is actually in play. "No offer" stays in the default
+  // colour: red is reserved for Miami, and spending it on the *absence* of
+  // Miami would both misread as an alert and dilute the signal.
+  &__stat--miami-yes b {
+    color: var(--tertiary);
+  }
+
   // Photo, name, and two labeled stat cells do not coexist in the ~326px a
   // post leaves on a phone. The ratings drop to their own row rather than
   // crushing the identity block.

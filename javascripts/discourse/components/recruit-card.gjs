@@ -1,6 +1,7 @@
 import Component from "@glimmer/component";
 import { isMiamiTeam, relativeAge, sortOffers } from "../lib/recruit-data";
 import RecruitEditorial from "./recruit-editorial";
+import RecruitStatBlock from "./recruit-stat-block";
 
 // Five chips is two rows at 326px — the usable width inside a Discourse post
 // on a 390px phone — where eight is four rows and taller than the player's
@@ -22,6 +23,10 @@ export default class RecruitCard extends Component {
 
   get layout() {
     return settings.card_layout;
+  }
+
+  get isStatBlock() {
+    return this.layout === "stat_block";
   }
 
   // "QB · 2027 · Cincinnati Elder" — every part optional, joined only if present.
@@ -57,6 +62,18 @@ export default class RecruitCard extends Component {
     const ranks = Array.isArray(this.recruit.ranks) ? this.recruit.ranks : [];
     const natl = ranks.find((r) => /natl|national/i.test(String(r.label || "")));
     return natl && Number.isFinite(natl.value) ? natl.value : null;
+  }
+
+  // Presence, not truthiness — the same discipline as hasRating247. Both of
+  // these getters return null for "247 reported nothing" and a number
+  // otherwise, so a template gating on the bare value would collapse a
+  // genuine 0 into the absent case and render the two identically.
+  get hasNationalRank() {
+    return this.nationalRank !== null;
+  }
+
+  get hasOfferCount() {
+    return this.offerCount !== null;
   }
 
   // Finite checks throughout, never truthiness: a rating of 0 is a real
@@ -151,7 +168,15 @@ export default class RecruitCard extends Component {
     return relativeAge(this.recruit.fetched_at);
   }
 
+  // Editorial is the {{else}} branch deliberately: an unrecognised or empty
+  // card_layout value must fall back to the default layout rather than
+  // render nothing at all — and by then the initializer has already cleared
+  // the onebox's contents, so "nothing" would mean an empty box.
   <template>
-    <RecruitEditorial @card={{this}} />
+    {{#if this.isStatBlock}}
+      <RecruitStatBlock @card={{this}} />
+    {{else}}
+      <RecruitEditorial @card={{this}} />
+    {{/if}}
   </template>
 }
