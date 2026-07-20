@@ -72,8 +72,10 @@ aside.onebox[data-mht-recruit-rendered] {
 
   // align-items: flex-start, not the default stretch: either cell can now be a
   // line taller than the other (one rating has stars, the other doesn't, or one
-  // is a star row with no number at all), and the labels must stay on a common
-  // baseline rather than one cell's content floating in a stretched box.
+  // is a star row with no number at all). This aligns the cells' top edges, so
+  // in that asymmetric case a numberless cell's label sits level with the
+  // other's number — deliberate, since the alternative is a short cell's
+  // content floating in a box stretched to its neighbour's height.
   &__rating-pair {
     display: flex;
     align-items: flex-start;

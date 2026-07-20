@@ -16,15 +16,22 @@ const CHIP_LIMIT = 5;
 // only ever mean a difference in the data. Two near-copies of this would be
 // free to drift in their clamping or their glyphs and quietly invent one.
 //
-// Plain text, never htmlSafe, so it cannot inject. Clamped to the 0-5 scale so
-// an out-of-range value can't render more than five glyphs. A non-finite input
-// yields five hollow stars, which reads as "zero stars" — a false claim about a
-// named teenager — so callers must gate on the matching has* getter and never
-// render this unconditionally.
+// Plain text, never htmlSafe, so it cannot inject. Clamped to at most 5 glyphs
+// so an out-of-range value can't render a longer row.
+//
+// Returns null rather than a row of five hollow stars for any input that isn't
+// a real count of at least one star. Five hollow stars reads as "zero stars" —
+// a false claim about a named teenager, and this component's most-repeated bug
+// class. Callers still gate on the matching has* getter; this is the second
+// line of defence, because that gate gets its answer from Number.isFinite,
+// which a negative number passes. The server maps zero filled stars to nil for
+// the same reason, so "we counted none" and "there was nothing to count" are
+// one case here, not two.
 function starRow(raw) {
-  const filled = Number.isFinite(raw)
-    ? Math.min(5, Math.max(0, Math.floor(raw)))
-    : 0;
+  if (!Number.isFinite(raw) || raw < 1) {
+    return null;
+  }
+  const filled = Math.min(5, Math.floor(raw));
   return "★".repeat(filled) + "☆".repeat(5 - filled);
 }
 
@@ -145,7 +152,7 @@ export default class RecruitCard extends Component {
   // 0 arriving here must render as a real value rather than vanish. Do not
   // "simplify" this to `Boolean(this.recruit.stars)`.
   get hasStars() {
-    return Number.isFinite(this.recruit.stars);
+    return this.starsText !== null;
   }
 
   // The 247 section's star row. Shares starRow with the composite's below so
@@ -160,7 +167,7 @@ export default class RecruitCard extends Component {
   // but no composite_stars, and the composite cell must then show its number
   // with no star row rather than a hollow one.
   get hasCompositeStars() {
-    return Number.isFinite(this.recruit.composite_stars);
+    return this.compositeStarsText !== null;
   }
 
   get compositeStarsText() {
