@@ -70,9 +70,12 @@ export default class RecruitEditorial extends Component {
 
       {{#if @card.offerChips}}
         <div class="mht-recruit__offers">
-          {{! The separator is inside the count branch, not between two
+          {{!-- Block-comment form is required, not {{! }}: that one ends at
+              the FIRST "}}", so a comment mentioning template syntax
+              terminates early and leaks its own tail as visible text.
+              The separator is inside the count branch, not between two
               independent {{#if}}s: with only a rank line the brief's shape
-              rendered a dangling leading "· ". }}
+              rendered a dangling leading "· ". --}}
           {{#if @card.hasOffersLabel}}
             <div class="mht-recruit__offers-label">
               {{#if @card.offerCount}}

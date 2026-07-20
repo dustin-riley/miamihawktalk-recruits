@@ -113,6 +113,19 @@ duplicate-fetch guard, set *before* the fetch and therefore present on failures
 too. Keying on that one would strip the frame from a failed fetch and leave the
 reader a chromeless box. Do not "simplify" it.
 
+## Template comments must use `{{!-- --}}`
+
+A `{{! ... }}` comment ends at the **first `}}`**, so a comment that mentions
+template syntax — `{{#if}}`, `{{i18n}}`, anything — terminates there and dumps
+its own tail into the post as visible text. This shipped once: a comment
+explaining an `{{#if}}` rendered `s: with only a rank line the brief's shape
+rendered a dangling leading "· ". }}` on every card.
+
+The comments in this repo routinely quote template syntax, because that is what
+they exist to explain. So always use the block form `{{!-- --}}`, which can
+contain `}}`. There is no build step here to catch it — the first sign is a
+reader seeing it.
+
 ## Translations must go through `themePrefix`
 
 Keys sit directly under `en:` with no `js:` level. A bare `i18n("offers")`

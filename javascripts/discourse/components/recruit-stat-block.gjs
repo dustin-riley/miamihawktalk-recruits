@@ -128,10 +128,13 @@ export default class RecruitStatBlock extends Component {
 
         {{#if this.hasStats}}
           <div class="mht-recruit__stats">
-            {{! hasOfferCount / hasNationalRank, never the bare numbers: a
+            {{!-- Block-comment form is required, not {{! }}: that one ends at
+                the FIRST "}}", so a comment mentioning template syntax
+                terminates early and leaks its own tail as visible text.
+                hasOfferCount / hasNationalRank, never the bare numbers: a
                 reported count of 0 is a real, publishable fact and must render
                 as "0 Offers", where {{#if @card.offerCount}} would hide it and
-                make it indistinguishable from 247 not reporting one at all. }}
+                make it indistinguishable from 247 not reporting one at all. --}}
             {{#if @card.hasOfferCount}}
               <div class="mht-recruit__stat">
                 <b>{{@card.offerCount}}</b>
