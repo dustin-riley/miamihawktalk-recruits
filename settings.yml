@@ -1,8 +1,9 @@
-offers_max_height:
-  type: integer
-  default: 180
-  min: 80
-  max: 600
+card_layout:
+  type: enum
+  default: editorial
+  choices:
+    - editorial
+    - stat_block
 
 pin_miami_first:
   type: bool

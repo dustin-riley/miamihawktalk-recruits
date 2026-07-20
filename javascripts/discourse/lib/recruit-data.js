@@ -63,8 +63,12 @@ export function relativeAge(iso) {
     return null;
   }
   const minutes = Math.floor((Date.now() - then) / 60000);
+  // Duration tokens only — "<1m", "5m", "3h", "2d" — never prose. The i18n
+  // string "updated %{age} ago" owns the tense, so returning "just now" here
+  // rendered "updated just now ago". Keeping the grammar in the string means
+  // it lives in one place instead of being special-cased in the template too.
   if (minutes < 1) {
-    return "just now";
+    return "<1m";
   }
   if (minutes < 60) {
     return `${minutes}m`;

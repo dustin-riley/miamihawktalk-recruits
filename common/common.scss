@@ -45,7 +45,7 @@
     text-overflow: ellipsis;
   }
 
-  // The stars row and the composite number are rendered independently by the
+  // The stars row and the 247 number are rendered independently by the
   // component (an offer can have one without the other), so neither may rely
   // on the other's presence for spacing or layout.
   &__rating {
@@ -58,7 +58,9 @@
     letter-spacing: 0.05em;
   }
 
-  &__composite {
+  // The 247 rating, not the composite — those are two different numbers and
+  // the payload now carries both, so this class says which one it styles.
+  &__rating-247 {
     font-weight: 700;
     font-size: $font-up-2;
     color: var(--primary);
