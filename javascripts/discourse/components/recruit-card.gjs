@@ -41,7 +41,7 @@ export default class RecruitCard extends Component {
   get nationalRank() {
     const ranks = Array.isArray(this.recruit.ranks) ? this.recruit.ranks : [];
     const natl = ranks.find((r) => /natl|national/i.test(String(r.label || "")));
-    return natl ? natl.value : null;
+    return natl && Number.isFinite(natl.value) ? natl.value : null;
   }
 
   // Finite checks throughout, never truthiness: a rating of 0 is a real

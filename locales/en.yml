@@ -3,8 +3,9 @@ en:
     description: "Renders 247Sports recruit profiles as rich cards in posts."
   source: "247Sports"
   updated: "updated %{age} ago"
-  offers: "%{count} offers"
-  offers_one: "1 offer"
+  offers:
+    one: "%{count} offer"
+    other: "%{count} offers"
   more_offers: "+%{count} more"
   committed_to: "Committed to %{team}"
   rating_247: "247"
