@@ -21,9 +21,21 @@ export default apiInitializer((api) => {
         continue;
       }
 
-      // Replace the whole onebox when Discourse made one; otherwise fall back
-      // to the bare link, which happens for inline (non-standalone) links.
-      const target = link.closest("aside.onebox") || link;
+      // Only swap a real onebox. A mid-sentence (non-oneboxed) 247 link has
+      // no `aside.onebox` ancestor — leave it exactly as Discourse rendered
+      // it rather than mounting a block-level card's contents (including its
+      // own inner <a> tags) as children of the bare inline <a>. That would
+      // both break markup (nested/invalid anchors, block content bursting
+      // out of inline text flow) and, on re-decoration, compound: the card's
+      // freshly-rendered inner links would match this same broad selector,
+      // find no onebox ancestor either, and fall back to targeting
+      // themselves with no dataset guard, nesting another card inside the
+      // already-broken one on every subsequent pass. Do not restore a
+      // `|| link` fallback here.
+      const target = link.closest("aside.onebox");
+      if (!target) {
+        continue;
+      }
 
       // Guard against a post containing the same recruit twice.
       if (target.dataset.mhtRecruit) {
@@ -32,17 +44,21 @@ export default apiInitializer((api) => {
       target.dataset.mhtRecruit = slug;
 
       // Fetch first, render second: a failure must leave the onebox untouched.
-      fetchRecruit(slug).then((recruit) => {
-        if (!recruit || !target.isConnected) {
-          return;
-        }
-        helper.renderGlimmer(
-          target,
-          RecruitCard,
-          { recruit, url: link.href },
-          { append: false }
-        );
-      });
+      fetchRecruit(slug)
+        .then((recruit) => {
+          if (!recruit || !target.isConnected) {
+            return;
+          }
+          helper.renderGlimmer(
+            target,
+            RecruitCard,
+            { recruit, url: link.href },
+            { append: false }
+          );
+        })
+        .catch(() => {
+          // Silent: the reader's correct outcome is the untouched onebox.
+        });
     }
   });
 });
