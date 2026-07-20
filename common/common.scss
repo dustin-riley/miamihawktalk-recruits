@@ -62,6 +62,10 @@
     font-weight: 700;
     font-size: $font-up-2;
     color: var(--primary);
+    // Small gap so this doesn't abut &__stars when both render. Applied here
+    // (not as margin-bottom on &__stars) so it's harmless when this is the
+    // only child rendered.
+    margin-top: 0.2em;
   }
 
   &__offers {
@@ -71,6 +75,10 @@
     // Without overscroll-behavior, scrolling to the end of this list captures
     // the page scroll on mobile and the post jumps.
     overflow-y: auto;
+    // Explicit, rather than relying on the "auto" this would otherwise
+    // compute to from overflow-y being a scrolling value: this list must
+    // never scroll horizontally, only vertically.
+    overflow-x: hidden;
     overscroll-behavior: contain;
     border-top: 1px solid var(--primary-low);
   }
@@ -96,6 +104,14 @@
   }
 
   &__team {
+    // Flex items default to min-width: auto, which resolves to min-content —
+    // with white-space: nowrap there are no wrap points, so min-content is
+    // the full unrendered text width and the item never shrinks far enough
+    // for overflow/text-overflow to engage. min-width: 0 lifts that floor so
+    // this can actually truncate instead of forcing the row (and the
+    // scrolling list around it) wider. Mirrors &__identity above.
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
