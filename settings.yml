@@ -1,0 +1,9 @@
+offers_max_height:
+  type: integer
+  default: 180
+  min: 80
+  max: 600
+
+pin_miami_first:
+  type: bool
+  default: true

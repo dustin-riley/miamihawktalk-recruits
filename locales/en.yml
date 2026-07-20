@@ -1,0 +1,5 @@
+en:
+  theme_metadata:
+    description: "Renders 247Sports recruit profiles as rich cards in posts."
+  source: "247Sports"
+  updated: "updated %{age} ago"
