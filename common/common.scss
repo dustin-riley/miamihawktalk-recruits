@@ -1,7 +1,18 @@
+// Discourse draws its own bordered, rounded, padded box around a onebox. Our
+// card is that box, so leaving both produces a rounded box inside a rounded
+// box. Suppressed here rather than in the parent theme because the component
+// is what creates the situation and must clean up after itself.
+//
+// The attribute comes from `target.dataset.mhtRecruit = slug` in the
+// api-initializer, which serialises to data-mht-recruit.
+aside.onebox[data-mht-recruit] {
+  border: none;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+}
+
 .mht-recruit {
-  border: 1px solid var(--primary-low);
-  border-radius: 4px;
-  padding: 0.75em;
   background: var(--secondary);
 
   &__head {
@@ -28,8 +39,7 @@
     font-weight: 700;
     font-size: $font-up-1;
     color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
+    letter-spacing: -0.01em;
 
     &:hover {
       color: var(--tertiary);
@@ -37,7 +47,7 @@
   }
 
   &__subtitle,
-  &__ranks {
+  &__meta {
     font-size: $font-down-1;
     color: var(--primary-medium);
     white-space: nowrap;
@@ -45,88 +55,111 @@
     text-overflow: ellipsis;
   }
 
-  // The stars row and the 247 number are rendered independently by the
-  // component (an offer can have one without the other), so neither may rely
-  // on the other's presence for spacing or layout.
+  // The 247 rating and the composite are on different scales (0-100 and 0-1),
+  // so neither may render as a bare number — the label is what makes the pair
+  // readable, and either one can be absent independently.
   &__rating {
     flex: 0 0 auto;
     text-align: right;
   }
 
-  &__stars {
-    color: var(--tertiary);
-    letter-spacing: 0.05em;
-  }
-
-  // The 247 rating, not the composite — those are two different numbers and
-  // the payload now carries both, so this class says which one it styles.
-  &__rating-247 {
-    font-weight: 700;
-    font-size: $font-up-2;
-    color: var(--primary);
-    // Small gap so this doesn't abut &__stars when both render. Applied here
-    // (not as margin-bottom on &__stars) so it's harmless when this is the
-    // only child rendered.
-    margin-top: 0.2em;
-  }
-
-  &__offers {
-    list-style: none;
-    margin: 0.75em 0 0;
-    padding: 0;
-    // Without overscroll-behavior, scrolling to the end of this list captures
-    // the page scroll on mobile and the post jumps.
-    overflow-y: auto;
-    // Explicit, rather than relying on the "auto" this would otherwise
-    // compute to from overflow-y being a scrolling value: this list must
-    // never scroll horizontally, only vertically.
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-    border-top: 1px solid var(--primary-low);
-  }
-
-  &__offer {
+  &__rating-pair {
     display: flex;
-    justify-content: space-between;
-    gap: 0.5em;
-    padding: 0.3em 0;
-    font-size: $font-down-1;
-    border-bottom: 1px solid var(--primary-very-low);
+    gap: 0.9em;
+    justify-content: flex-end;
+  }
 
-    // Sticky so the row the reader came for stays visible while they scroll
-    // the rest of the list. The background must match the card's own
-    // (var(--secondary), set above) or scrolling rows would show through it.
-    &--miami {
+  &__stat {
+    text-align: center;
+
+    b {
+      display: block;
+      font-size: $font-up-2;
       font-weight: 700;
-      color: var(--tertiary);
-      position: sticky;
-      top: 0;
-      background: var(--secondary);
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    span {
+      font-size: $font-down-2;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--primary-medium);
     }
   }
 
-  &__team {
-    // Flex items default to min-width: auto, which resolves to min-content —
-    // with white-space: nowrap there are no wrap points, so min-content is
-    // the full unrendered text width and the item never shrinks far enough
-    // for overflow/text-overflow to engage. min-width: 0 lifts that floor so
-    // this can actually truncate instead of forcing the row (and the
-    // scrolling list around it) wider. Mirrors &__identity above.
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  &__stars {
+    color: var(--tertiary);
+    letter-spacing: 0.05em;
+    font-size: $font-down-1;
+    margin-top: 0.25em;
   }
 
-  &__status {
-    flex: 0 0 auto;
-    text-transform: capitalize;
+  &__commit {
+    margin-top: 0.7em;
+    padding: 0.45em 0.7em;
+    background: var(--tertiary);
+    color: var(--secondary);
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: $font-down-1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  &__offers {
+    margin-top: 0.7em;
+    padding-top: 0.6em;
+    border-top: 1px solid var(--primary-low);
+  }
+
+  &__offers-label {
+    font-size: $font-down-2;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
     color: var(--primary-medium);
   }
 
-  &__offer--miami &__status {
-    color: var(--tertiary);
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35em;
+    margin-top: 0.5em;
+  }
+
+  // max-width and ellipsis are load-bearing, not defensive: at the ~326px a
+  // Discourse post leaves on a 390px phone, a name like "Southeastern
+  // Louisiana" is wider than the card and would otherwise overflow it.
+  // display is stated rather than left to blockification by the flex parent,
+  // so the chip still ellipsises if it is ever rendered outside &__chips.
+  &__chip {
+    display: inline-block;
+    font-size: $font-down-1;
+    padding: 0.15em 0.55em;
+    border: 1px solid var(--primary-low);
+    border-radius: 1em;
+    color: var(--primary);
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    // A flex item's min-width floor is min-content, which with nowrap is the
+    // full untruncated text width — so without this the chip refuses to
+    // shrink and pushes the card wider instead of ellipsising. Mirrors the
+    // same fix the old offer-row markup needed.
+    min-width: 0;
+
+    &--miami {
+      border-color: var(--tertiary);
+      color: var(--tertiary);
+      font-weight: 700;
+    }
+
+    &--more {
+      border: none;
+      color: var(--primary-medium);
+      text-decoration: underline;
+    }
   }
 
   &__footer {
@@ -137,6 +170,36 @@
     a {
       color: var(--primary-medium);
       text-decoration: underline;
+    }
+  }
+
+  // Editorial: no card frame at all, just an accent rule down the left edge
+  // that turns red on commitment.
+  &--editorial {
+    border-left: 3px solid var(--primary-low);
+    padding: 0.2em 0 0.2em 0.85em;
+  }
+
+  &--editorial#{&}--committed {
+    border-left-color: var(--tertiary);
+  }
+
+  // Photo, name, and two labeled stat cells do not coexist in the ~326px a
+  // post leaves on a phone. The ratings drop to their own row rather than
+  // crushing the identity block.
+  @media (max-width: 550px) {
+    &--editorial &__head {
+      flex-wrap: wrap;
+    }
+
+    &--editorial &__rating {
+      flex: 1 0 100%;
+      text-align: left;
+      margin-top: 0.5em;
+    }
+
+    &--editorial &__rating-pair {
+      justify-content: flex-start;
     }
   }
 }

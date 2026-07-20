@@ -1,7 +1,6 @@
 import Component from "@glimmer/component";
-import { i18n } from "discourse-i18n";
-import { themePrefix } from "virtual:theme";
 import { isMiamiTeam, relativeAge, sortOffers } from "../lib/recruit-data";
+import RecruitEditorial from "./recruit-editorial";
 
 // Five chips is two rows at 326px — the usable width inside a Discourse post
 // on a 390px phone — where eight is four rows and taller than the player's
@@ -12,6 +11,13 @@ const CHIP_LIMIT = 5;
 export default class RecruitCard extends Component {
   get recruit() {
     return this.args.data.recruit;
+  }
+
+  // The layouts receive the whole component as @card and never see @data, so
+  // the source URL has to be reachable as a card property like everything
+  // else — @card.url is what both templates link to.
+  get url() {
+    return this.args.data.url;
   }
 
   get layout() {
@@ -136,98 +142,7 @@ export default class RecruitCard extends Component {
     return relativeAge(this.recruit.fetched_at);
   }
 
-  // --- Legacy getters, used only by the <template> below ---------------------
-  // Task 6 replaces that template with the two new layouts and deletes these.
-  // Until then they must stay: removing them now breaks the rendered card.
-
-  // An absent rating and a zero rating mean different things: omit the whole
-  // cluster rather than rendering 0 or NR.
-  get hasRating() {
-    return Number.isFinite(this.recruit.rating) || Number.isFinite(this.recruit.stars);
-  }
-
-  // Same finite check as hasRating — a rating of 0 must render the 247 number,
-  // not hide it the way a plain truthiness check on `0` would.
-  get hasCompositeRating() {
-    return Number.isFinite(this.recruit.rating);
-  }
-
-  // null (no offers section on the page) renders no panel at all. An empty
-  // array would render an empty bordered box.
-  //
-  // The Miami flag is computed here rather than called from the template:
-  // invoking a plain function in a template subexpression relies on Ember's
-  // function-as-helper behaviour, and a precomputed property needs no such
-  // assumption.
-  get offers() {
-    if (this.recruit.offers === null || this.recruit.offers === undefined) {
-      return null;
-    }
-    const sorted = sortOffers(this.recruit.offers, settings.pin_miami_first);
-    if (!sorted.length) {
-      return null;
-    }
-    return sorted.map((offer) => ({
-      ...offer,
-      isMiami: isMiamiTeam(offer.team),
-    }));
-  }
-
   <template>
-    <div class="mht-recruit">
-      <div class="mht-recruit__head">
-        {{#if this.recruit.photo}}
-          <img class="mht-recruit__photo" src={{this.recruit.photo}} alt="" loading="lazy" />
-        {{/if}}
-
-        <div class="mht-recruit__identity">
-          <a class="mht-recruit__name" href={{@data.url}} target="_blank" rel="noopener noreferrer">
-            {{this.recruit.name}}
-          </a>
-          {{#if this.subtitle}}
-            <div class="mht-recruit__subtitle">{{this.subtitle}}</div>
-          {{/if}}
-          {{#if this.rankLine}}
-            <div class="mht-recruit__ranks">{{this.rankLine}}</div>
-          {{/if}}
-        </div>
-
-        {{#if this.hasRating}}
-          <div class="mht-recruit__rating">
-            {{#if this.hasStars}}
-              <div class="mht-recruit__stars">{{this.starsText}}</div>
-            {{/if}}
-            {{#if this.hasCompositeRating}}
-              <div class="mht-recruit__rating-247">{{this.recruit.rating}}</div>
-            {{/if}}
-          </div>
-        {{/if}}
-      </div>
-
-      {{#if this.offers}}
-        <ul class="mht-recruit__offers">
-          {{#each this.offers as |offer|}}
-            <li
-              class="mht-recruit__offer
-                {{if offer.isMiami 'mht-recruit__offer--miami'}}"
-            >
-              <span class="mht-recruit__team">{{offer.team}}</span>
-              {{#if offer.status}}
-                <span class="mht-recruit__status">{{offer.status}}</span>
-              {{/if}}
-            </li>
-          {{/each}}
-        </ul>
-      {{/if}}
-
-      <div class="mht-recruit__footer">
-        <a href={{@data.url}} target="_blank" rel="noopener noreferrer">
-          {{i18n (themePrefix "source")}}
-        </a>
-        {{#if this.age}}
-          · {{i18n (themePrefix "updated") age=this.age}}
-        {{/if}}
-      </div>
-    </div>
+    <RecruitEditorial @card={{this}} />
   </template>
 }
