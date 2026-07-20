@@ -70,8 +70,13 @@ aside.onebox[data-mht-recruit-rendered] {
     text-align: right;
   }
 
+  // align-items: flex-start, not the default stretch: either cell can now be a
+  // line taller than the other (one rating has stars, the other doesn't, or one
+  // is a star row with no number at all), and the labels must stay on a common
+  // baseline rather than one cell's content floating in a stretched box.
   &__rating-pair {
     display: flex;
+    align-items: flex-start;
     gap: 0.9em;
     justify-content: flex-end;
   }
@@ -95,11 +100,26 @@ aside.onebox[data-mht-recruit-rendered] {
     }
   }
 
+  // Lives *inside* a &__stat, one row per rating, so the 247 count and the
+  // composite's each sit under the number they belong to and a divergence
+  // between them is legible. It inherits the cell's text-align, which is why
+  // there is none here — centred in the ratings cells, and it never appears in
+  // the left-aligned &__stats row.
+  //
+  // display: block is stated rather than left to the div, because the row has
+  // to break the line after the inline &__stat span it follows. nowrap is
+  // load-bearing at both narrow widths this component is sized against: the
+  // ~88px stat-block rail and, in editorial, two of these cells side by side
+  // in the ~326px a post leaves on a 390px phone. Five glyphs split across two
+  // lines would misread as a different star count.
   &__stars {
+    display: block;
     color: var(--tertiary);
     letter-spacing: 0.05em;
     font-size: $font-down-1;
+    line-height: 1.2;
     margin-top: 0.25em;
+    white-space: nowrap;
   }
 
   // Red means Miami everywhere else in this component (the editorial accent
@@ -241,6 +261,12 @@ aside.onebox[data-mht-recruit-rendered] {
   // meaning Miami rather than "commitment generally"; a recruit committed to
   // another school keeps the neutral rail and gets a plain commit line in the
   // body instead.
+  //
+  // All three inner selectors are *descendant* selectors under the rail, not
+  // child selectors, which is what makes this still correct now that each
+  // rating owns its own &__stars: both rows are nested one level deeper, inside
+  // their &__stat, and both are still matched. A child combinator here would
+  // leave both star rows tertiary-on-tertiary — red on red, invisible.
   &--committed#{&}--stat-block &__rail {
     background: var(--tertiary);
 

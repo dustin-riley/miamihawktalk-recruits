@@ -37,23 +37,42 @@ export default class RecruitEditorial extends Component {
 
         {{#if @card.hasAnyRating}}
           <div class="mht-recruit__rating">
+            {{!-- Block-comment form is required, not the short one: that ends
+                at the FIRST "}}", so a comment mentioning template syntax
+                terminates early and leaks its own tail as visible text.
+                Each rating carries its own star row, always, so a divergence
+                between the 247 count and the composite's is visible rather
+                than hidden behind a single shared row. Every gate is
+                independent: showRating247/showComposite decide the cell,
+                hasStars/hasCompositeStars decide that cell's stars. An absent
+                count renders no row at all — never five hollow stars, which
+                would read as "zero stars" about a named teenager. --}}
             <div class="mht-recruit__rating-pair">
-              {{#if @card.hasRating247}}
+              {{#if @card.showRating247}}
                 <div class="mht-recruit__stat">
-                  <b>{{@card.recruit.rating}}</b>
+                  {{#if @card.hasRating247}}
+                    <b>{{@card.recruit.rating}}</b>
+                  {{/if}}
                   <span>{{i18n (themePrefix "rating_247")}}</span>
+                  {{#if @card.hasStars}}
+                    <div class="mht-recruit__stars">{{@card.starsText}}</div>
+                  {{/if}}
                 </div>
               {{/if}}
-              {{#if @card.hasComposite}}
+              {{#if @card.showComposite}}
                 <div class="mht-recruit__stat">
-                  <b>{{@card.compositeText}}</b>
+                  {{#if @card.hasComposite}}
+                    <b>{{@card.compositeText}}</b>
+                  {{/if}}
                   <span>{{i18n (themePrefix "rating_composite")}}</span>
+                  {{#if @card.hasCompositeStars}}
+                    <div
+                      class="mht-recruit__stars"
+                    >{{@card.compositeStarsText}}</div>
+                  {{/if}}
                 </div>
               {{/if}}
             </div>
-            {{#if @card.hasStars}}
-              <div class="mht-recruit__stars">{{@card.starsText}}</div>
-            {{/if}}
           </div>
         {{/if}}
       </div>

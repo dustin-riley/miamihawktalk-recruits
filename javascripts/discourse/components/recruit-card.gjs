@@ -9,6 +9,25 @@ import RecruitStatBlock from "./recruit-stat-block";
 // never hides the row a reader came for.
 const CHIP_LIMIT = 5;
 
+// The one implementation behind both star rows. 247's `stars` and the
+// composite's `composite_stars` are separate numbers that the card shows side
+// by side precisely so a divergence between them is visible — which only works
+// if the *rendering* of the two is identical, so a difference on screen can
+// only ever mean a difference in the data. Two near-copies of this would be
+// free to drift in their clamping or their glyphs and quietly invent one.
+//
+// Plain text, never htmlSafe, so it cannot inject. Clamped to the 0-5 scale so
+// an out-of-range value can't render more than five glyphs. A non-finite input
+// yields five hollow stars, which reads as "zero stars" — a false claim about a
+// named teenager — so callers must gate on the matching has* getter and never
+// render this unconditionally.
+function starRow(raw) {
+  const filled = Number.isFinite(raw)
+    ? Math.min(5, Math.max(0, Math.floor(raw)))
+    : 0;
+  return "★".repeat(filled) + "☆".repeat(5 - filled);
+}
+
 export default class RecruitCard extends Component {
   get recruit() {
     return this.args.data.recruit;
@@ -86,8 +105,22 @@ export default class RecruitCard extends Component {
     return Number.isFinite(this.recruit.composite_rating);
   }
 
+  // Each rating owns its own star row, so a rating's cell has two independent
+  // reasons to exist: the number, or the stars. Both are needed because the
+  // server can report one without the other — `rating` demands an integer
+  // .rank-block where `stars` only needs a .stars-block, so a section carrying
+  // a decimal rank-block yields stars with a null rating. Gating the cell on
+  // the number alone would silently drop a real star row.
+  get showRating247() {
+    return this.hasRating247 || this.hasStars;
+  }
+
+  get showComposite() {
+    return this.hasComposite || this.hasCompositeStars;
+  }
+
   get hasAnyRating() {
-    return this.hasRating247 || this.hasComposite || this.hasStars;
+    return this.showRating247 || this.showComposite;
   }
 
   // ".8600" — the leading zero is dropped because the number only ever sits
@@ -107,16 +140,31 @@ export default class RecruitCard extends Component {
 
   // An absent `stars` must never be depicted as an empty five-star row, so the
   // row itself is conditional on this rather than always rendering starsText.
+  // Number.isFinite, not truthiness: the server returns nil rather than 0 for
+  // "no stars found", but that is the server's contract, not this card's, and a
+  // 0 arriving here must render as a real value rather than vanish. Do not
+  // "simplify" this to `Boolean(this.recruit.stars)`.
   get hasStars() {
     return Number.isFinite(this.recruit.stars);
   }
 
-  // Plain text, not markup — no htmlSafe, so this can never inject. Clamped
-  // to the 0-5 scale so an out-of-range value can't render more than 5 glyphs.
+  // The 247 section's star row. Shares starRow with the composite's below so
+  // the two can never drift — see the comment on it.
   get starsText() {
-    const raw = this.recruit.stars;
-    const filled = Number.isFinite(raw) ? Math.min(5, Math.max(0, Math.floor(raw))) : 0;
-    return "★".repeat(filled) + "☆".repeat(5 - filled);
+    return starRow(this.recruit.stars);
+  }
+
+  // The composite's own star count, new alongside `composite_rating`. Absent
+  // independently of `stars`: the server reads it from the Composite section
+  // with no fallback, so a single-section page (enrolled players) yields stars
+  // but no composite_stars, and the composite cell must then show its number
+  // with no star row rather than a hollow one.
+  get hasCompositeStars() {
+    return Number.isFinite(this.recruit.composite_stars);
+  }
+
+  get compositeStarsText() {
+    return starRow(this.recruit.composite_stars);
   }
 
   get commitmentTeam() {

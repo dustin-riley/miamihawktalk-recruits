@@ -90,20 +90,35 @@ export default class RecruitStatBlock extends Component {
             loading="lazy"
           />
         {{/if}}
-        {{#if @card.hasRating247}}
+        {{!-- Block-comment form is required, not the short one: that ends at
+            the FIRST "}}", so a comment mentioning template syntax terminates
+            early and leaks its own tail as visible text.
+            The rail stacks the two ratings vertically, so each one's star row
+            sits directly beneath it — same structure as editorial, which is
+            why both layouts read the same four independent gates off @card
+            rather than deciding anything themselves. An absent star count
+            renders no row; it is never drawn as five hollow stars. --}}
+        {{#if @card.showRating247}}
           <div class="mht-recruit__stat">
-            <b>{{@card.recruit.rating}}</b>
+            {{#if @card.hasRating247}}
+              <b>{{@card.recruit.rating}}</b>
+            {{/if}}
             <span>{{i18n (themePrefix "rating_247")}}</span>
+            {{#if @card.hasStars}}
+              <div class="mht-recruit__stars">{{@card.starsText}}</div>
+            {{/if}}
           </div>
         {{/if}}
-        {{#if @card.hasComposite}}
+        {{#if @card.showComposite}}
           <div class="mht-recruit__stat">
-            <b>{{@card.compositeText}}</b>
+            {{#if @card.hasComposite}}
+              <b>{{@card.compositeText}}</b>
+            {{/if}}
             <span>{{i18n (themePrefix "rating_composite")}}</span>
+            {{#if @card.hasCompositeStars}}
+              <div class="mht-recruit__stars">{{@card.compositeStarsText}}</div>
+            {{/if}}
           </div>
-        {{/if}}
-        {{#if @card.hasStars}}
-          <div class="mht-recruit__stars">{{@card.starsText}}</div>
         {{/if}}
       </div>
 
