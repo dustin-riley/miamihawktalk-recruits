@@ -2,10 +2,29 @@ const ENDPOINT = "/redhawks-recruit.json";
 
 // Matches the plugin's RecruitSource::SLUG. Trailing slash optional because
 // people paste both forms.
-const PLAYER_HREF = /247sports\.com\/player\/([a-z0-9-]+-\d+)\/?/i;
+const PLAYER_PATH = /^\/player\/([a-z0-9-]+-\d+)\/?/i;
+
+// A regex can't safely express "this is really 247sports.com" — something
+// like `evil-247sports.com` or `247sports.com.attacker.net` satisfies almost
+// any string match you'd write, and `?u=247sports.com/player/...` on a
+// stranger's host satisfies it too. The URL parser gives us the actual host,
+// which is the one thing a crafted string can't spoof.
+const ALLOWED_HOSTS = new Set(["247sports.com", "www.247sports.com"]);
 
 export function slugFrom(href) {
-  const match = PLAYER_HREF.exec(String(href || ""));
+  let url;
+  try {
+    // Cooked posts always hand us an absolute href, but this also runs
+    // against hand-typed/pasted strings, so a bad parse must fall through to
+    // null rather than throw and take the caller down with it.
+    url = new URL(String(href || ""));
+  } catch {
+    return null;
+  }
+  if (!ALLOWED_HOSTS.has(url.hostname.toLowerCase())) {
+    return null;
+  }
+  const match = PLAYER_PATH.exec(url.pathname);
   return match ? match[1].toLowerCase() : null;
 }
 
@@ -21,7 +40,15 @@ export async function fetchRecruit(slug) {
       return null;
     }
     const payload = await response.json();
-    if (!payload || typeof payload.recruit !== "object" || payload.recruit === null) {
+    // typeof null === "object" and typeof [] === "object", so both need an
+    // explicit check — an array would otherwise spread into {"0":.., "1":..}
+    // instead of resolving null, same discipline as the sibling module.
+    if (
+      !payload ||
+      typeof payload.recruit !== "object" ||
+      payload.recruit === null ||
+      Array.isArray(payload.recruit)
+    ) {
       return null;
     }
     return { ...payload.recruit, fetched_at: payload.fetched_at };
