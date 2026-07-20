@@ -44,6 +44,15 @@ export default class RecruitCard extends Component {
     return ranks.map((rank) => `${rank.label} #${rank.value}`).join(" · ");
   }
 
+  // Mirrors the truthy checks the offers-label markup itself branches on
+  // (offerCount, then rankLine) so the label's own gate can never drift out
+  // of sync with what it decides to render. Without this, a recruit with
+  // neither a reported offer count nor a rank line still gets an empty
+  // &__offers-label div — roughly a line-box of dead space above the chips.
+  get hasOffersLabel() {
+    return Boolean(this.offerCount) || Boolean(this.rankLine);
+  }
+
   get nationalRank() {
     const ranks = Array.isArray(this.recruit.ranks) ? this.recruit.ranks : [];
     const natl = ranks.find((r) => /natl|national/i.test(String(r.label || "")));

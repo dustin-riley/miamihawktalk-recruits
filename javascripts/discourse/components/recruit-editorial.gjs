@@ -59,7 +59,10 @@ export default class RecruitEditorial extends Component {
       </div>
 
       {{#if @card.commitmentTeam}}
-        <div class="mht-recruit__commit">
+        <div
+          class="mht-recruit__commit
+            {{if @card.committedToMiami 'mht-recruit__commit--miami'}}"
+        >
           ★
           {{i18n (themePrefix "committed_to") team=@card.commitmentTeam}}
         </div>
@@ -70,16 +73,18 @@ export default class RecruitEditorial extends Component {
           {{! The separator is inside the count branch, not between two
               independent {{#if}}s: with only a rank line the brief's shape
               rendered a dangling leading "· ". }}
-          <div class="mht-recruit__offers-label">
-            {{#if @card.offerCount}}
-              {{i18n (themePrefix "offers") count=@card.offerCount}}
-              {{#if @card.rankLine}}
-                · {{@card.rankLine}}
+          {{#if @card.hasOffersLabel}}
+            <div class="mht-recruit__offers-label">
+              {{#if @card.offerCount}}
+                {{i18n (themePrefix "offers") count=@card.offerCount}}
+                {{#if @card.rankLine}}
+                  · {{@card.rankLine}}
+                {{/if}}
+              {{else if @card.rankLine}}
+                {{@card.rankLine}}
               {{/if}}
-            {{else if @card.rankLine}}
-              {{@card.rankLine}}
-            {{/if}}
-          </div>
+            </div>
+          {{/if}}
           <div class="mht-recruit__chips">
             {{#each @card.offerChips as |chip|}}
               <span

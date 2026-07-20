@@ -3,9 +3,16 @@
 // box. Suppressed here rather than in the parent theme because the component
 // is what creates the situation and must clean up after itself.
 //
-// The attribute comes from `target.dataset.mhtRecruit = slug` in the
-// api-initializer, which serialises to data-mht-recruit.
-aside.onebox[data-mht-recruit] {
+// Keyed on data-mht-recruit-rendered, NOT data-mht-recruit. data-mht-recruit
+// is set synchronously before the fetch (it's the duplicate-fetch guard), so
+// it's present even when the fetch fails or resolves null — keying the CSS on
+// it would strip the onebox frame on the failure path too, leaving the reader
+// with an unstyled, chromeless box. data-mht-recruit-rendered is set only in
+// the api-initializer's success branch, immediately around the
+// helper.renderGlimmer() call, so this rule only ever applies once a card has
+// actually replaced the onebox's contents. Do not "simplify" this back to
+// data-mht-recruit.
+aside.onebox[data-mht-recruit-rendered] {
   border: none;
   padding: 0;
   background: none;
@@ -95,16 +102,30 @@ aside.onebox[data-mht-recruit] {
     margin-top: 0.25em;
   }
 
+  // Red means Miami everywhere else in this component (the editorial accent
+  // rule, the --miami chip), so the banner defaults to a neutral treatment
+  // and only takes the red/tertiary fill for an actual Miami commitment —
+  // otherwise a recruit committed to another school reads as a Miami
+  // headline. The neutral variant keeps the same bold/uppercase/bordered
+  // shape so it still reads unmistakably as a commitment banner, not a
+  // demoted or hidden one.
   &__commit {
     margin-top: 0.7em;
     padding: 0.45em 0.7em;
-    background: var(--tertiary);
-    color: var(--secondary);
+    background: var(--primary-very-low);
+    color: var(--primary);
+    border: 1px solid var(--primary-low);
     border-radius: 3px;
     font-weight: 700;
     font-size: $font-down-1;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+
+    &--miami {
+      background: var(--tertiary);
+      color: var(--secondary);
+      border-color: var(--tertiary);
+    }
   }
 
   &__offers {

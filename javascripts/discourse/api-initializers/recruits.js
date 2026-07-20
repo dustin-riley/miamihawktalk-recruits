@@ -49,6 +49,14 @@ export default apiInitializer((api) => {
           if (!recruit || !target.isConnected) {
             return;
           }
+          // Distinct from the `data-mht-recruit` guard above: that one is set
+          // synchronously before the fetch so a duplicate recruit in the same
+          // post doesn't double-fetch, which means it's present on the
+          // failure path too. `data-mht-recruit-rendered` is set only here,
+          // once a card has actually been mounted, so the onebox-suppressing
+          // CSS (common.scss) keys off this attribute instead — a failed or
+          // null fetch must leave Discourse's own onebox frame intact.
+          target.dataset.mhtRecruitRendered = "";
           helper.renderGlimmer(
             target,
             RecruitCard,
