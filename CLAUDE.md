@@ -54,9 +54,31 @@ generally". A recruit committed to Ohio State gets the neutral treatment.
 
 **Absent and zero must never render identically.** Use the `has*` getters
 (`hasRating247`, `hasComposite`, `hasStars`, `hasOfferCount`,
-`hasNationalRank`) rather than gating a template on the bare value — these all
-return `null` for "247 reported nothing", and `{{#if}}` on the value itself
-would hide a real 0. This bug class has recurred here.
+`hasNationalRank`) rather than gating a template on the bare value. Each `has*`
+getter returns a boolean; it is the underlying value getter it tests
+(`offerCount`, `nationalRank`, `recruit.rating`, …) that returns `null` for
+"247 reported nothing". `{{#if}}` on that bare value would hide a real 0. This
+bug class has recurred here.
+
+**Absent must never render as a negative claim.** The same discipline, one
+level up: these cards make statements about named real teenagers, so "we have
+no data" may never be presented as "the answer is no". The server encodes the
+distinction — `offers` is `null` when the 247 page had no offers section at all
+(enrolled players, or a parse that found nothing) and `[]` when it looked and
+found none. Only `[]` supports "Miami has not offered". `hasOfferData`
+(`Array.isArray(recruit.offers)`) is the gate; `miamiOffered` is `false` in
+both cases and is never read on its own.
+
+The stat block **omits** its Miami cell when `hasOfferData` is false rather
+than showing an unknown state — a card that says less is honest, where "Miami —
+Unknown" invents a subject 247 never reported on. Because that cell can now
+disappear, `hasStats` guards the whole `__stats` row, which carries a
+`border-top` that would otherwise render as a stray rule.
+
+**`committedToMiami` derives from the top-level `committed_to` field, not from
+the offers list**, so a recruit committed to Miami keeps their "Committed" cell
+even when `offers` is `null`. Do not "simplify" `showMiamiStat` down to
+`hasOfferData` alone; that is precisely the enrolled-player case.
 
 ## Chips are offered schools only
 
@@ -83,8 +105,9 @@ renders the literal `[en.offers]` on screen for every user.
 
 ## Colours come from the parent theme
 
-Use `var(--primary)`, `var(--tertiary)`, `var(--primary-medium)`,
-`var(--primary-low)`. **Never hardcode a colour** — the parent theme ships light
+Use `var(--primary)`, `var(--secondary)`, `var(--tertiary)`,
+`var(--primary-medium)`, `var(--primary-low)`, `var(--primary-very-low)` —
+the full set `common.scss` draws on. **Never hardcode a colour** — the parent theme ships light
 and dark schemes and a literal hex breaks one of them.
 
 ## Verifying changes

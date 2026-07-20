@@ -21,6 +21,34 @@ export default class RecruitStatBlock extends Component {
     return i18n(themePrefix("miami_none"));
   }
 
+  // "No offer" is a factual claim about a real teenager, and the only evidence
+  // for it is an offers list we actually parsed. When offers is null the page
+  // had no offers section at all, so the cell is omitted rather than rendered
+  // in an unknown state: the two neighbouring stats already vanish when their
+  // value is absent, and a card that simply says less is honest where one
+  // reading "Miami — Unknown" invents a subject 247 never reported on.
+  //
+  // committedToMiami comes from the top-level `committed_to` field, not from
+  // the offers list, so a Miami commit keeps its "Committed" cell even when
+  // offers is null — which is exactly the enrolled-player case that made this
+  // bug reachable.
+  get showMiamiStat() {
+    return Boolean(
+      this.args.card.committedToMiami || this.args.card.hasOfferData
+    );
+  }
+
+  // The stats row carries a border-top, so an all-absent row would render as a
+  // stray rule under the identity block. Now that the Miami cell is
+  // conditional, that row can genuinely be empty.
+  get hasStats() {
+    return Boolean(
+      this.args.card.hasOfferCount ||
+        this.args.card.hasNationalRank ||
+        this.showMiamiStat
+    );
+  }
+
   // Red means Miami, never "commitment generally" — so the Miami stat's value
   // only takes the accent colour when Miami is actually in play. Rendering
   // "No offer" in tertiary would read as an alert and, worse, would spend the
@@ -92,31 +120,39 @@ export default class RecruitStatBlock extends Component {
           </div>
         {{/if}}
 
-        <div class="mht-recruit__stats">
-          {{! hasOfferCount / hasNationalRank, never the bare numbers: a
-              reported count of 0 is a real, publishable fact and must render
-              as "0 Offers", where {{#if @card.offerCount}} would hide it and
-              make it indistinguishable from 247 not reporting one at all. }}
-          {{#if @card.hasOfferCount}}
-            <div class="mht-recruit__stat">
-              <b>{{@card.offerCount}}</b>
-              <span>{{i18n (themePrefix "stat_offers")}}</span>
-            </div>
-          {{/if}}
-          {{#if @card.hasNationalRank}}
-            <div class="mht-recruit__stat">
-              <b>{{@card.nationalRank}}</b>
-              <span>{{i18n (themePrefix "stat_national")}}</span>
-            </div>
-          {{/if}}
-          <div
-            class="mht-recruit__stat mht-recruit__stat--miami
-              {{if this.hasMiamiInterest 'mht-recruit__stat--miami-yes'}}"
-          >
-            <b>{{this.miamiLabel}}</b>
-            <span>{{i18n (themePrefix "stat_miami")}}</span>
+        {{#if this.hasStats}}
+          <div class="mht-recruit__stats">
+            {{! hasOfferCount / hasNationalRank, never the bare numbers: a
+                reported count of 0 is a real, publishable fact and must render
+                as "0 Offers", where {{#if @card.offerCount}} would hide it and
+                make it indistinguishable from 247 not reporting one at all. }}
+            {{#if @card.hasOfferCount}}
+              <div class="mht-recruit__stat">
+                <b>{{@card.offerCount}}</b>
+                <span>{{i18n (themePrefix "stat_offers")}}</span>
+              </div>
+            {{/if}}
+            {{#if @card.hasNationalRank}}
+              <div class="mht-recruit__stat">
+                <b>{{@card.nationalRank}}</b>
+                <span>{{i18n (themePrefix "stat_national")}}</span>
+              </div>
+            {{/if}}
+            {{! Omitted, never rendered as "No offer", when offers is null: the
+                absence of an offers section is not evidence that Miami passed on
+                this player. showMiamiStat still lets a Miami commit through,
+                because that comes from committed_to, not from the offers list. }}
+            {{#if this.showMiamiStat}}
+              <div
+                class="mht-recruit__stat mht-recruit__stat--miami
+                  {{if this.hasMiamiInterest 'mht-recruit__stat--miami-yes'}}"
+              >
+                <b>{{this.miamiLabel}}</b>
+                <span>{{i18n (themePrefix "stat_miami")}}</span>
+              </div>
+            {{/if}}
           </div>
-        </div>
+        {{/if}}
 
         <div class="mht-recruit__footer">
           <a

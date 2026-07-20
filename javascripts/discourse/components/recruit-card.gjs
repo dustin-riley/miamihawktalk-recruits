@@ -127,8 +127,20 @@ export default class RecruitCard extends Component {
     return isMiamiTeam(this.commitmentTeam);
   }
 
+  // The server sends `offers: null` when the 247 page had no offers section at
+  // all — an enrolled player, or a parse that found nothing — as distinct from
+  // an empty list, which means "we looked and there are none". Only the latter
+  // supports the negative claim "Miami has not offered". Absence of data about
+  // a named teenager must never render as a statement about them, so every
+  // consumer of miamiOffered has to gate on this first.
+  get hasOfferData() {
+    return Array.isArray(this.recruit.offers);
+  }
+
   // Distinct from committedToMiami: a recruit can hold a Miami offer while
   // committed elsewhere, and the stat block reports those as different states.
+  // False when offers is null — which is why this is never read on its own;
+  // pair it with hasOfferData to tell "no offer" from "we don't know".
   get miamiOffered() {
     const offers = Array.isArray(this.recruit.offers) ? this.recruit.offers : [];
     return offers.some((o) => isMiamiTeam(o.team) && o.offered === true);
