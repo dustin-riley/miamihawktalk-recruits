@@ -22,19 +22,25 @@ export default class RecruitStatBlock extends Component {
   }
 
   // "No offer" is a factual claim about a real teenager, and the only evidence
-  // for it is an offers list we actually parsed. When offers is null the page
-  // had no offers section at all, so the cell is omitted rather than rendered
-  // in an unknown state: the two neighbouring stats already vanish when their
-  // value is absent, and a card that simply says less is honest where one
-  // reading "Miami — Unknown" invents a subject 247 never reported on.
+  // for it is a *complete* offers list. The cell is omitted otherwise rather
+  // than rendered in an unknown state: the two neighbouring stats already
+  // vanish when their value is absent, and a card that simply says less is
+  // honest where one reading "Miami — Unknown" invents a subject 247 never
+  // reported on.
+  //
+  // offersComplete, not hasOfferData — see the comment on it in recruit-card.
+  // hasOfferData is true both when 247 reported no schools at all *and* when
+  // the interests fetch failed and the array holds only the five schools the
+  // player page displayed. Gating on it rendered "Miami — No offer" for a
+  // recruit with sixteen offers we simply never read.
   //
   // committedToMiami comes from the top-level `committed_to` field, not from
-  // the offers list, so a Miami commit keeps its "Committed" cell even when
-  // offers is null — which is exactly the enrolled-player case that made this
-  // bug reachable.
+  // the offers list, so a Miami commit keeps its "Committed" cell whether that
+  // list is null, truncated or complete — the enrolled-player case that made
+  // this bug reachable in the first place.
   get showMiamiStat() {
     return Boolean(
-      this.args.card.committedToMiami || this.args.card.hasOfferData
+      this.args.card.committedToMiami || this.args.card.offersComplete
     );
   }
 

@@ -137,6 +137,24 @@ export default class RecruitCard extends Component {
     return Array.isArray(this.recruit.offers);
   }
 
+  // hasOfferData is not enough to support a negative claim. The server builds
+  // `offers` from the player page first — which shows only about five of a
+  // recruit's schools — then replaces it with the full list from the interests
+  // page. When that second fetch fails, `offers` is left holding the truncated
+  // five and is still an array, so hasOfferData is true on a list that is a
+  // sample rather than an answer. Sa'Nir Brooks (17 schools) renders as five.
+  //
+  // `offer_count` is the marker for the difference: RecruitAssembler.merge sets
+  // it inside the one branch that assigns the full interests rows, and never
+  // anywhere else, so its presence means "this list is the complete one" and
+  // its absence means "these rows are whatever the player page happened to
+  // show". That coupling lives on the server and is not visible from here,
+  // which is why it is written down. Nothing may derive "Miami has not offered"
+  // from an incomplete list.
+  get offersComplete() {
+    return this.hasOfferData && this.hasOfferCount;
+  }
+
   // Distinct from committedToMiami: a recruit can hold a Miami offer while
   // committed elsewhere, and the stat block reports those as different states.
   // False when offers is null — which is why this is never read on its own;
@@ -167,13 +185,28 @@ export default class RecruitCard extends Component {
     }));
   }
 
-  // Prefers the server's full count over the list length: the list is what we
-  // parsed, the count is what 247 reported, and on a fallback render the two
-  // legitimately differ. Falls back to the list length when the count is
-  // absent, so a missing `offer_count` never silently zeroes the overflow.
+  // The count 247 reported minus the chips shown. Null — not 0 — when the
+  // server sent no `offer_count`, because that is the degraded path where the
+  // rows are a truncated sample (see offersComplete) and the true remainder is
+  // unknowable from here. Falling back to offeredSchools.length would compute
+  // 0 and drop the overflow link entirely, presenting five schools as if they
+  // were all of them: the exact lie by omission this card exists to fix.
   get hiddenOfferCount() {
-    const total = this.offerCount === null ? this.offeredSchools.length : this.offerCount;
-    return Math.max(0, total - this.offerChips.length);
+    if (this.offerCount === null) {
+      return null;
+    }
+    return Math.max(0, this.offerCount - this.offerChips.length);
+  }
+
+  // The overflow link renders whenever there is any chance of more — always on
+  // the degraded path, since a truncated list can never be shown to be whole.
+  // The template picks a numberless label in that case rather than inventing a
+  // remainder.
+  get hasHiddenOffers() {
+    if (this.hiddenOfferCount === null) {
+      return this.offerChips.length > 0;
+    }
+    return this.hiddenOfferCount > 0;
   }
 
   get age() {

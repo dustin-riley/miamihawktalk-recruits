@@ -69,7 +69,17 @@ found none. Only `[]` supports "Miami has not offered". `hasOfferData`
 (`Array.isArray(recruit.offers)`) is the gate; `miamiOffered` is `false` in
 both cases and is never read on its own.
 
-The stat block **omits** its Miami cell when `hasOfferData` is false rather
+`hasOfferData` is **not sufficient** for a negative claim. The server parses
+the player page first — which shows only ~5 schools — then overwrites `offers`
+with the full interests-page list. When that second fetch fails, the truncated
+five survive and the array is still an array. **`offersComplete`
+(`hasOfferData && hasOfferCount`) is the real gate**, because
+`RecruitAssembler.merge` sets `offer_count` inside the one branch that assigns
+the interests rows and nowhere else — so its presence *means* "this list is
+complete". Anything asserting what Miami did or did not do gates on
+`offersComplete`, never on `hasOfferData`.
+
+The stat block **omits** its Miami cell when `offersComplete` is false rather
 than showing an unknown state — a card that says less is honest, where "Miami —
 Unknown" invents a subject 247 never reported on. Because that cell can now
 disappear, `hasStats` guards the whole `__stats` row, which carries a
@@ -77,17 +87,22 @@ disappear, `hasStats` guards the whole `__stats` row, which carries a
 
 **`committedToMiami` derives from the top-level `committed_to` field, not from
 the offers list**, so a recruit committed to Miami keeps their "Committed" cell
-even when `offers` is `null`. Do not "simplify" `showMiamiStat` down to
-`hasOfferData` alone; that is precisely the enrolled-player case.
+when `offers` is `null` *and* when it is truncated. Do not "simplify"
+`showMiamiStat` down to `offersComplete` alone; that is precisely the
+enrolled-player case.
 
 ## Chips are offered schools only
 
 `offerChips` filters to `offered === true`, sorts via `sortOffers` (Miami
 pinned first when `pin_miami_first`), and caps at `CHIP_LIMIT` in
 `recruit-card.gjs`. A chip therefore *means* "offered" with no second visual
-class. `hiddenOfferCount` prefers the server's `offer_count` over the list
-length, falling back to the length when the count is absent. Chips exist in the
-editorial layout only.
+class. `hiddenOfferCount` is the server's `offer_count` minus the chips shown, and
+`null` — never 0 — when that count is absent, since the list is then a
+truncated sample whose remainder is unknowable. `hasHiddenOffers` still renders
+the overflow link in that case, with the numberless `more_offers_unknown`
+label. Never fall back to `offeredSchools.length`: it computes 0, drops the
+link, and presents five schools as the whole list. Chips exist in the editorial
+layout only.
 
 ## Onebox chrome suppression
 

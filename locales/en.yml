@@ -7,6 +7,7 @@ en:
     one: "%{count} offer"
     other: "%{count} offers"
   more_offers: "+%{count} more"
+  more_offers_unknown: "+ more"
   committed_to: "Committed to %{team}"
   rating_247: "247"
   rating_composite: "Composite"

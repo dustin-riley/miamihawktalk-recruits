@@ -92,16 +92,21 @@ export default class RecruitEditorial extends Component {
                   {{if chip.isMiami 'mht-recruit__chip--miami'}}"
               >{{chip.team}}</span>
             {{/each}}
-            {{#if @card.hiddenOfferCount}}
+            {{! hasHiddenOffers, not the bare count: when the server sent no
+                offer_count the chips are a truncated sample and the remainder
+                is unknown, so the link still has to render — it just renders
+                without a number rather than claiming one. Dropping it there
+                would show five schools as though they were the whole list. }}
+            {{#if @card.hasHiddenOffers}}
               <a
                 class="mht-recruit__chip mht-recruit__chip--more"
                 href={{@card.url}}
                 target="_blank"
                 rel="noopener noreferrer"
-              >{{i18n
-                  (themePrefix "more_offers")
-                  count=@card.hiddenOfferCount
-                }}</a>
+              >{{#if @card.hasOfferCount}}{{i18n
+                    (themePrefix "more_offers")
+                    count=@card.hiddenOfferCount
+                  }}{{else}}{{i18n (themePrefix "more_offers_unknown")}}{{/if}}</a>
             {{/if}}
           </div>
         </div>
